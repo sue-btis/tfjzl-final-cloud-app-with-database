@@ -94,39 +94,28 @@ class Enrollment(models.Model):
     mode = models.CharField(max_length=5, choices=COURSE_MODES, default=AUDIT)
     rating = models.FloatField(default=5.0)
 
-    
+
 class Question(models.Model):
-    course = models.ForeignKey('Course', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     content = models.CharField(max_length=200)
-    grade = models.PositiveIntegerField(default=50)
+    grade = models.IntegerField(default=50)
 
     def __str__(self):
-        return f"Question: {self.content}"
+        return "Question: " + self.content
 
     def is_get_score(self, selected_ids):
-        total_correct = self.choice_set.filter(is_correct=True).count()
+        all_answers = self.choice_set.filter(is_correct=True).count()
         selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
-        return total_correct == selected_correct
-
+        if all_answers == selected_correct:
+            return True
+        else:
+            return False
 
 class Choice(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='choices')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
     content = models.CharField(max_length=200)
     is_correct = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f"Choice: {self.content} (Correct: {self.is_correct})"
-
-
 class Submission(models.Model):
-    enrollment = models.ForeignKey('Enrollment', on_delete=models.CASCADE)
+    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
     choices = models.ManyToManyField(Choice)
-
-    def __str__(self):
-        return f"Submission for Enrollment ID: {self.enrollment.id}"
-# One enrollment could have multiple submission
-# One submission could have multiple choices
-# One choice could belong to multiple submissions
-#class Submission(models.Model):
-#    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
-#    choices = models.ManyToManyField(Choice)
